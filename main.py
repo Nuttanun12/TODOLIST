@@ -1,4 +1,5 @@
 from tkinter import *
+import speechmodule
 
 root = Tk()
 root.option_add('font', 'consulor 26')
