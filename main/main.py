@@ -1,4 +1,5 @@
 from tkinter import *
+from tkinter import messagebox
 import speech_recognition as sr
 import sqlite3 as sq
 
@@ -26,6 +27,7 @@ def speechtotext():
             todo.insert(END, text)
             cur.execute('insert into tasks values (?)',(text,))
             todolist.append(text)
+            conn.commit()
         except:
             pass
 
@@ -36,6 +38,7 @@ def addlist():
         listname.delete(0, END)
         todolist.append(word)
         cur.execute('INSERT INTO tasks VALUES (?)',(word,))
+        conn.commit()
     else:
         pass
     return NONE
@@ -53,15 +56,21 @@ def delete():
             updatelist()
             cur.execute('delete from tasks where title = ?',(selete))
             print(selete)
+            conn.commit()
     except:
         pass
 
 
 def clearlist():
-    todo.delete(0, END)
-    cur.execute('delete from tasks')
-    todolist.clear()
-
+    warn = messagebox.askyesno("DeleteALL", "Are you sure?")
+    if warn:
+        todo.delete(0, END)
+        cur.execute('delete from tasks')
+        todolist.clear()
+        conn.commit()
+    else:
+        pass
+    
 def exit():
     root.destroy()
 
@@ -70,7 +79,7 @@ def retasks():
         todo.insert(END, row)
         todolist.append(row)
 
-photo = PhotoImage(file= r"D:\System\Desktop\work\todolist_app\TODOLIST\Photo\microphone.png")
+photo = PhotoImage(file= r"microphone.png")
 photoimage = photo.subsample(6,6)
 Button(root, text="Add list" ,command=addlist ,width=20).place(x=20,y=90)
 Button(root, image= photoimage,command=speechtotext).place(x=20, y=212)
