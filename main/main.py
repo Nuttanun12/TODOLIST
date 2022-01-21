@@ -7,12 +7,12 @@ from tkinter import Button
 from tkinter import Label
 from tkinter import PhotoImage
 from tkinter.constants import DISABLED, NORMAL
+from playsound import playsound
 import speech_recognition as sr
 import sqlite3 as sq
 import threading
-import time
 
-conn = sq.connect("list.db")
+conn = sq.connect("list.db", check_same_thread=False)
 cur = conn.cursor()
 cur.execute('CREATE TABLE IF NOT EXISTS tasks (title text)')
 
@@ -32,17 +32,23 @@ todo.place(x=180, y=23)
 def speech_thread():
     def speechtotext():
         with sr.Microphone() as source:
-          audio_text = r.listen(source)
+            audio_text = r.listen(source)
         try:
-              text = r.recognize_google(audio_text, language='th')
-              todo.insert(END, text)
-              cur.execute('insert into tasks values (?)',(text,))
-              todolist.append(text)
-              conn.commit()
+            text = r.recognize_google(audio_text, language='th')
+            todo.insert(END, text)
+            cur.execute('INSERT INTO tasks VALUES (?)',(text,))
+            print('2')
+            todolist.append(text)
+            conn.commit()
+            print(todolist)
         except:
             pass
-    threadspeech = threading.Thread(target=speechtotext)
-    threadspeech.start()
+    def sound():
+        playsound('Trill.mp3')
+    thread = threading.Thread(target=speechtotext)
+    threadsound = threading.Thread(target=sound)
+    threadsound.start()
+    thread.start()
 
 def addlist():
     word = listname.get()
@@ -50,8 +56,10 @@ def addlist():
         todo.insert(END, word)
         listname.delete(0, END)
         todolist.append(word)
-        cur.execute('INSERT INTO tasks VALUES (?)',(word,))
+        print('adding')
+        cur.execute('INSERT INTO tasks VALUES(?)',(word,))
         conn.commit()
+        print('sec')
     else:
         pass
 
@@ -63,12 +71,13 @@ def updatelist():
 def delete():
     try:
         selete = todo.get(todo.curselection())
+        print(selete)
         if selete in todolist:
             todolist.remove(selete)
             updatelist()
-            cur.execute('delete from tasks where title = ?',(selete))
-            print(selete)
+            cur.execute('delete from tasks where title = ?',(selete,))
             conn.commit()
+            print(selete)
     except:
         pass
 
@@ -106,11 +115,23 @@ def listen_thread():
                     global auto
                     if auto:
                         break
-                    if "ปิด" in text:
+                    if text == "ปิด" or text == "Close":
                         break
                     if "เพิ่ม" in text:
-                        print("kanungnij")
-                    
+                        speech_thread()
+                    elif "ลบ" in text and "ทั้งหมด" in text or "เคลียร์" in text:
+                        clearlist()
+                    elif "ลบรายการที่" in text:
+                        number = [i for i in text.split() if i.isdigit()]
+                        number = int("".join(number))-1
+                        try:
+                            title = "".join(todolist[number])
+                            print(title)
+                            todolist.pop(number)
+                            updatelist()
+                            cur.execute('delete from tasks where title = ?',(title,))
+                        except:
+                            pass
             except:
                 pass
         b1['state'] = NORMAL
@@ -121,8 +142,6 @@ def listen_thread():
 def changer():
     global auto
     auto = True
-
-    
 
 photo = PhotoImage(file= r"microphone.png")
 photoimage = photo.subsample(6,6)
