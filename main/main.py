@@ -21,6 +21,8 @@ todolist = []
 root.option_add('font', 'consulor 26')
 root.title("ToDoList")
 root.geometry("420x280")
+root.minsize(420,280)
+root.maxsize(420,280)
 r = sr.Recognizer()
 auto = False
 
