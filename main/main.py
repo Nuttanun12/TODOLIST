@@ -12,7 +12,7 @@ import speech_recognition as sr
 import sqlite3 as sq
 import threading
 
-conn = sq.connect("list.db", check_same_thread=False)
+conn = sq.connect("list0.db", check_same_thread=False)
 cur = conn.cursor()
 cur.execute('CREATE TABLE IF NOT EXISTS tasks (title text)')
 
@@ -38,7 +38,7 @@ def speech_thread():
         try:
             text = r.recognize_google(audio_text, language='th')
             todo.insert(END, text)
-            cur.execute('INSERT INTO tasks VALUES (?)',(text,))
+            cur.execute('INSERT INTO tasks VALUES(?)',(text,))
             print('2')
             todolist.append(text)
             conn.commit()
@@ -74,12 +74,14 @@ def delete():
     try:
         selete = todo.get(todo.curselection())
         print(selete)
+        print(todolist)
         if selete in todolist:
             todolist.remove(selete)
             updatelist()
-            cur.execute('delete from tasks where title = ?',(selete,))
-            conn.commit()
+            cur.execute('delete from tasks where title = ?',(selete))
+      
             print(selete)
+        print(todolist)
     except:
         pass
 
@@ -117,7 +119,7 @@ def listen_thread():
                     global auto
                     if auto:
                         break
-                    if text == "ปิด" or text == "Close":
+                    if text == "ดัน" or text == "Done":
                         break
                     if "เพิ่ม" in text:
                         speech_thread()
@@ -131,7 +133,7 @@ def listen_thread():
                             print(title)
                             todolist.pop(number)
                             updatelist()
-                            cur.execute('delete from tasks where title = ?',(title,))
+                            cur.execute('delete from tasks where title = (?)',(title,))
                         except:
                             pass
             except:
@@ -145,7 +147,7 @@ def changer():
     global auto
     auto = True
 
-photo = PhotoImage(file= r"microphone.png")
+photo = PhotoImage(file="microphone.png")
 photoimage = photo.subsample(6,6)
 Button(root, text="Add list" ,command=addlist ,width=20).place(x=20,y=90)
 Button(root, image= photoimage,command=speech_thread).place(x=20, y=212)
